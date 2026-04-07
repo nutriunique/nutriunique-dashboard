@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutriUnique — Dashboard Estratégico</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #eeecea;
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --text3: #9a9a95;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --purple: #534AB7;
+    --purple-bg: #EEEDFE;
+    --teal: #1D9E75;
+    --teal-bg: #E1F5EE;
+    --amber: #BA7517;
+    --amber-bg: #FAEEDA;
+    --blue: #185FA5;
+    --blue-bg: #E6F1FB;
+    --green: #3B6D11;
+    --green-bg: #EAF3DE;
+    --red: #A32D2D;
+    --red-bg: #FCEBEB;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #252523;
+      --bg3: #2e2e2b;
+      --text: #e8e6df;
+      --text2: #9a9893;
+      --text3: #6b6967;
+      --border: rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.18);
+      --purple: #AFA9EC;
+      --purple-bg: #26215C;
+      --teal: #5DCAA5;
+      --teal-bg: #04342C;
+      --amber: #EF9F27;
+      --amber-bg: #412402;
+      --blue: #85B7EB;
+      --blue-bg: #042C53;
+      --green: #97C459;
+      --green-bg: #173404;
+      --red: #F09595;
+      --red-bg: #501313;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+  /* LAYOUT */
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: var(--bg); border-right: 0.5px solid var(--border); padding: 0; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .main { flex: 1; padding: 24px; overflow-x: hidden; }
+
+  /* SIDEBAR */
+  .logo { padding: 20px 18px 16px; border-bottom: 0.5px solid var(--border); }
+  .logo-name { font-size: 15px; font-weight: 600; color: var(--text); }
+  .logo-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .nav-section { padding: 12px 10px 4px; font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 14px; margin: 1px 6px; border-radius: var(--radius); cursor: pointer; font-size: 13px; color: var(--text2); transition: all .15s; border: none; background: none; width: calc(100% - 12px); text-align: left; }
+  .nav-item:hover { background: var(--bg2); color: var(--text); }
+  .nav-item.active { background: var(--purple-bg); color: var(--purple); font-weight: 500; }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  .sidebar-meta { padding: 14px 16px; border-top: 0.5px solid var(--border); margin-top: auto; font-size: 11px; color: var(--text3); }
+
+  /* PAGE HEADER */
+  .page-header { margin-bottom: 20px; }
+  .page-title { font-size: 20px; font-weight: 600; }
+  .page-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* KPI GRID */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; }
+  .kpi-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .kpi-val { font-size: 24px; font-weight: 600; color: var(--text); }
+  .kpi-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .kpi-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .kpi-bar-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+
+  /* CARDS */
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; margin-bottom: 12px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .card-title { font-size: 13px; font-weight: 500; }
+  .card-badge { font-size: 11px; padding: 3px 10px; border-radius: 10px; font-weight: 500; }
+
+  /* GRIDS */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 12px; }
+
+  /* BARS */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .bar-label { font-size: 12px; color: var(--text2); width: 100px; flex-shrink: 0; text-align: right; }
+  .bar-track { flex: 1; height: 8px; background: var(--bg2); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width .6s ease; }
+  .bar-val { font-size: 12px; font-weight: 500; width: 60px; text-align: right; }
+
+  /* PROGRESS */
+  .prog-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+  .prog-label span:first-child { color: var(--text2); }
+  .prog-label span:last-child { font-weight: 500; }
+  .prog-track { height: 6px; background: var(--bg2); border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
+  .prog-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+
+  /* TASKS */
+  .task-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+  .task-row:last-child { border-bottom: none; }
+  .cb { width: 17px; height: 17px; border-radius: 4px; border: 1.5px solid var(--border2); flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 1px; transition: all .15s; background: transparent; }
+  .cb.done { background: var(--teal-bg); border-color: var(--teal); }
+  .cb.done::after { content: '✓'; font-size: 10px; color: var(--teal); font-weight: 700; }
+  .task-text { font-size: 13px; line-height: 1.4; flex: 1; }
+  .task-text.done { text-decoration: line-through; color: var(--text3); }
+  .task-tag { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 8px; margin-left: 4px; flex-shrink: 0; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { text-align: left; padding: 8px 12px; border-bottom: 0.5px solid var(--border2); font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; }
+  .data-table td { padding: 10px 12px; border-bottom: 0.5px solid var(--border); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--bg2); }
+
+  /* ROW ITEM */
+  .row-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .row-item:last-child { border-bottom: none; }
+
+  /* PILL */
+  .pill { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 10px; font-weight: 500; }
+  .pill-purple { background: var(--purple-bg); color: var(--purple); }
+  .pill-teal   { background: var(--teal-bg);   color: var(--teal);   }
+  .pill-amber  { background: var(--amber-bg);  color: var(--amber);  }
+  .pill-blue   { background: var(--blue-bg);   color: var(--blue);   }
+  .pill-green  { background: var(--green-bg);  color: var(--green);  }
+  .pill-red    { background: var(--red-bg);    color: var(--red);    }
+
+  /* TIMELINE */
+  .tl-wrap { padding-left: 22px; position: relative; }
+  .tl-wrap::before { content: ''; position: absolute; left: 7px; top: 4px; bottom: 4px; width: 1px; background: var(--border2); }
+  .tl-item { position: relative; margin-bottom: 16px; }
+  .tl-dot { position: absolute; left: -20px; top: 4px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--bg); }
+  .tl-phase { font-size: 11px; color: var(--text3); font-weight: 500; }
+  .tl-title { font-size: 13px; font-weight: 600; margin: 2px 0 3px; }
+  .tl-desc { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+  /* WEEK GRID */
+  .week-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; margin-bottom: 12px; }
+  .day-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 12px; }
+  .day-name { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 0.5px solid var(--border); }
+  .day-block { font-size: 11px; padding: 6px 8px; border-radius: 6px; margin-bottom: 5px; line-height: 1.35; border-left: 2px solid transparent; }
+
+  /* SIMULATOR */
+  .sim-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .sim-row-input { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+  .sim-row-input:last-child { border-bottom: none; }
+  .sim-label { font-size: 12px; color: var(--text2); flex: 1; }
+  .sim-input { width: 80px; padding: 5px 8px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg2); color: var(--text); font-size: 13px; text-align: right; }
+  .sim-input:focus { outline: none; border-color: var(--purple); }
+  .sim-result { background: var(--bg2); border-radius: var(--radius-lg); padding: 14px 16px; margin-top: 14px; }
+  .sim-result-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 4px 0; }
+  .sim-total { font-size: 18px; font-weight: 700; padding-top: 10px; margin-top: 6px; border-top: 0.5px solid var(--border2); }
+  .sim-msg { font-size: 12px; margin-top: 8px; padding: 8px 12px; border-radius: var(--radius); }
+
+  /* CHART WRAP */
+  .chart-wrap { position: relative; height: 200px; }
+
+  /* BUTTONS */
+  .btn { padding: 8px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); font-size: 12px; cursor: pointer; transition: all .15s; }
+  .btn:hover { background: var(--bg2); }
+  .btn-primary { background: var(--purple-bg); color: var(--purple); border-color: transparent; }
+  .btn-primary:hover { opacity: .85; }
+
+  /* SAVE BANNER */
+  #save-banner { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--teal); color: white; padding: 10px 18px; border-radius: var(--radius-lg); font-size: 13px; font-weight: 500; z-index: 100; transition: opacity .3s; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .sidebar { width: 60px; }
+    .nav-item span:not(.nav-icon) { display: none; }
+    .logo-name, .logo-sub, .nav-section, .sidebar-meta { display: none; }
+    .logo { padding: 14px 10px; }
+    .nav-item { justify-content: center; padding: 10px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid2, .sim-form { grid-template-columns: 1fr; }
+    .week-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .main { padding: 14px; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .week-grid { grid-template-columns: 1fr; }
+    .grid3 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-name">NutriUnique</div>
+    <div class="logo-sub">Dashboard estratégico</div>
+  </div>
+  <div class="nav-section">Principal</div>
+  <button class="nav-item active" onclick="go('visao',this)"><span class="nav-icon">📊</span><span>Visão geral</span></button>
+  <button class="nav-item" onclick="go('escola',this)"><span class="nav-icon">🏫</span><span>Escola online</span></button>
+  <button class="nav-item" onclick="go('fluxy',this)"><span class="nav-icon">💧</span><span>Consultoria Fluxy</span></button>
+  <div class="nav-section">Gestão</div>
+  <button class="nav-item" onclick="go('tarefas',this)"><span class="nav-icon">✅</span><span>Tarefas</span></button>
+  <button class="nav-item" onclick="go('rotina',this)"><span class="nav-icon">🗓️</span><span>Rotina semanal</span></button>
+  <button class="nav-item" onclick="go('conteudo',this)"><span class="nav-icon">📱</span><span>Conteúdo</span></button>
+  <div class="nav-section">Financeiro</div>
+  <button class="nav-item" onclick="go('simulador',this)"><span class="nav-icon">🧮</span><span>Simulador</span></button>
+  <button class="nav-item" onclick="go('metas',this)"><span class="nav-icon">🎯</span><span>Metas</span></button>
+  <button class="nav-item" onclick="go('timeline',this)"><span class="nav-icon">🗺️</span><span>Timeline</span></button>
+  <div class="sidebar-meta">Atualizado: <span id="last-updated">—</span></div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- VISÃO GERAL -->
+<div id="visao" class="page active">
+  <div class="page-header">
+    <div class="page-title">Visão geral</div>
+    <div class="page-sub">Resumo executivo do negócio · Meta: R$30k/mês até dez/2026</div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Receita total/mês</div>
+      <div class="kpi-val" id="kpi-rec">R$0</div>
+      <div class="kpi-sub">meta: R$30.000</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-rec" style="width:0%;background:var(--teal)"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Assinantes escola</div>
+      <div class="kpi-val" id="kpi-esc">0</div>
+      <div class="kpi-sub">meta: 200 (dez/26)</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-esc" style="width:0%;background:var(--purple)"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Assinantes Fluxy</div>
+      <div class="kpi-val" id="kpi-flu">0</div>
+      <div class="kpi-sub">meta: 150 (dez/26)</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-flu" style="width:0%;background:var(--teal)"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Fase atual</div>
+      <div class="kpi-val" style="font-size:16px" id="kpi-fase">Fase 1</div>
+      <div class="kpi-sub" id="kpi-fase-sub">Construção de sistemas</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" id="bar-fase" style="width:10%;background:var(--amber)"></div></div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Progresso rumo a R$30k</span></div>
+      <div class="prog-label"><span>Escola (meta R$21.600)</span><span id="prog-esc-v">R$0</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-esc" style="width:0%;background:var(--purple)"></div></div>
+      <div class="prog-label"><span>Fluxy (meta R$5.985)</span><span id="prog-flu-v">R$0</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-flu" style="width:0%;background:var(--teal)"></div></div>
+      <div class="prog-label"><span>Cursos avulsos (meta R$2.415)</span><span id="prog-cur-v">R$0</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog-cur" style="width:0%;background:var(--amber)"></div></div>
+      <div style="margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;font-size:13px">
+        <span style="color:var(--text2)">Total atual</span>
+        <span style="font-weight:600" id="prog-tot">R$0 <span style="color:var(--text3);font-weight:400;font-size:11px">(0% da meta)</span></span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Projeção de crescimento</span></div>
+      <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Distribuição de receita por produto</span></div>
+    <div class="bar-row"><span class="bar-label">Escola</span><div class="bar-track"><div class="bar-fill" id="dist-esc" style="width:0%;background:var(--purple)"></div></div><span class="bar-val" id="dist-esc-v">—</span></div>
+    <div class="bar-row"><span class="bar-label">Fluxy</span><div class="bar-track"><div class="bar-fill" id="dist-flu" style="width:0%;background:var(--teal)"></div></div><span class="bar-val" id="dist-flu-v">—</span></div>
+    <div class="bar-row"><span class="bar-label">Cursos avulsos</span><div class="bar-track"><div class="bar-fill" id="dist-cur" style="width:0%;background:var(--amber)"></div></div><span class="bar-val" id="dist-cur-v">—</span></div>
+  </div>
+</div>
+
+<!-- ESCOLA -->
+<div id="escola" class="page">
+  <div class="page-header">
+    <div class="page-title">Escola de Nutrição Online</div>
+    <div class="page-sub">Produto de assinatura · Sistema de casas e níveis</div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Total assinantes</div><div class="kpi-val" id="esc-total">0</div><div class="kpi-sub">meta: 200</div><div class="kpi-bar"><div class="kpi-bar-fill" id="esc-total-bar" style="width:0%;background:var(--purple)"></div></div></div>
+    <div class="kpi"><div class="kpi-label">Receita escola/mês</div><div class="kpi-val" id="esc-rec">R$0</div><div class="kpi-sub">meta: R$21.600</div><div class="kpi-bar"><div class="kpi-bar-fill" id="esc-rec-bar" style="width:0%;background:var(--purple)"></div></div></div>
+    <div class="kpi"><div class="kpi-label">Aulas gravadas</div><div class="kpi-val" id="esc-aulas">0</div><div class="kpi-sub">meta MVP: 12 (Essência)</div></div>
+    <div class="kpi"><div class="kpi-label">Próximo lançamento</div><div class="kpi-val" style="font-size:15px">Jun/26</div><div class="kpi-sub">Webinário Turma 1</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Ocupação das casas</span></div>
+      <div class="bar-row"><span class="bar-label" style="width:80px">🌱 Essência</span><div class="bar-track"><div class="bar-fill" id="casa-e" style="width:0%;background:#1D9E75"></div></div><span class="bar-val" id="casa-e-v">0</span></div>
+      <div class="bar-row"><span class="bar-label" style="width:80px">🔬 Clínica+</span><div class="bar-track"><div class="bar-fill" id="casa-c" style="width:0%;background:var(--purple)"></div></div><span class="bar-val" id="casa-c-v">0</span></div>
+      <div class="bar-row"><span class="bar-label" style="width:80px">⚡ Expert</span><div class="bar-track"><div class="bar-fill" id="casa-x" style="width:0%;background:var(--blue)"></div></div><span class="bar-val" id="casa-x-v">0</span></div>
+      <div class="bar-row"><span class="bar-label" style="width:80px">🏆 Mentoria</span><div class="bar-track"><div class="bar-fill" id="casa-m" style="width:0%;background:var(--amber)"></div></div><span class="bar-val" id="casa-m-v">0</span></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Planos e preços</span></div>
+      <div class="row-item"><span>🌱 Essência</span><span style="font-weight:600;color:var(--teal)">R$97/mês</span></div>
+      <div class="row-item"><span>🔬 Clínica+</span><span style="font-weight:600;color:var(--teal)">R$147/mês</span></div>
+      <div class="row-item"><span>⚡ Expert</span><span style="font-weight:600;color:var(--teal)">R$247/mês</span></div>
+      <div class="row-item"><span>🏆 Mentoria</span><span style="font-weight:600;color:var(--teal)">R$497/mês</span></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--text3)">Plano anual: 30% de desconto</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Progresso de gravação das aulas</span></div>
+    <div class="prog-label"><span>🌱 Casa Essência — 12 aulas</span><span id="aula-e-v">0 / 12</span></div>
+    <div class="prog-track"><div class="prog-fill" id="aula-e" style="width:0%;background:var(--teal)"></div></div>
+    <div class="prog-label"><span>🔬 Casa Clínica — 12 aulas</span><span id="aula-c-v">0 / 12</span></div>
+    <div class="prog-track"><div class="prog-fill" id="aula-c" style="width:0%;background:var(--purple)"></div></div>
+    <div class="prog-label"><span>⚡ Casa Expert — 8 aulas</span><span id="aula-x-v">0 / 8</span></div>
+    <div class="prog-track"><div class="prog-fill" id="aula-x" style="width:0%;background:var(--blue)"></div></div>
+    <div class="prog-label"><span>🏆 Casa Mentoria — estrutura</span><span id="aula-m-v">0 / 4</span></div>
+    <div class="prog-track"><div class="prog-fill" id="aula-m" style="width:0%;background:var(--amber)"></div></div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="ajustarAulas()">Atualizar aulas gravadas</button>
+    </div>
+  </div>
+</div>
+
+<!-- FLUXY -->
+<div id="fluxy" class="page">
+  <div class="page-header">
+    <div class="page-title">Consultoria Fluxy</div>
+    <div class="page-sub">Atendimento em escala · R$39,90/mês · IA + videochamada mensal</div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Assinantes ativos</div><div class="kpi-val" id="flu-total">0</div><div class="kpi-sub">meta: 150</div><div class="kpi-bar"><div class="kpi-bar-fill" id="flu-total-bar" style="width:0%;background:var(--teal)"></div></div></div>
+    <div class="kpi"><div class="kpi-label">Receita Fluxy/mês</div><div class="kpi-val" id="flu-rec">R$0</div><div class="kpi-sub">meta: R$5.985</div><div class="kpi-bar"><div class="kpi-bar-fill" id="flu-rec-bar" style="width:0%;background:var(--teal)"></div></div></div>
+    <div class="kpi"><div class="kpi-label">Capacidade atual</div><div class="kpi-val">160</div><div class="kpi-sub">clientes/mês (solo)</div></div>
+    <div class="kpi"><div class="kpi-label">Calls/semana</div><div class="kpi-val">~32</div><div class="kpi-sub">seg–qui · 14h–16h</div></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Capacidade operacional</span></div>
+      <div class="bar-row"><span class="bar-label" style="width:110px">Conservador</span><div class="bar-track"><div class="bar-fill" style="width:50%;background:var(--teal)"></div></div><span class="bar-val" style="color:var(--teal)">80/mês</span></div>
+      <div class="bar-row"><span class="bar-label" style="width:110px">Realista</span><div class="bar-track"><div class="bar-fill" style="width:75%;background:var(--teal)"></div></div><span class="bar-val" style="color:var(--teal)">120/mês</span></div>
+      <div class="bar-row"><span class="bar-label" style="width:110px">Máximo solo</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#085041"></div></div><span class="bar-val" style="color:#085041">160/mês</span></div>
+      <div class="bar-row"><span class="bar-label" style="width:110px">Com parceira</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--purple)"></div></div><span class="bar-val" style="color:var(--purple)">320/mês</span></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Infraestrutura Fluxy</span></div>
+      <div class="task-row"><div class="cb" id="flu-cb1" onclick="togCb(this,'flu-cb1')"></div><div class="task-text" id="flu-t1">Formulário anamnese (Typeform)</div></div>
+      <div class="task-row"><div class="cb" id="flu-cb2" onclick="togCb(this,'flu-cb2')"></div><div class="task-text" id="flu-t2">Pagamento recorrente (Kiwify)</div></div>
+      <div class="task-row"><div class="cb" id="flu-cb3" onclick="togCb(this,'flu-cb3')"></div><div class="task-text" id="flu-t3">Calendly configurado</div></div>
+      <div class="task-row"><div class="cb" id="flu-cb4" onclick="togCb(this,'flu-cb4')"></div><div class="task-text" id="flu-t4">Landing page publicada</div></div>
+      <div class="task-row"><div class="cb" id="flu-cb5" onclick="togCb(this,'flu-cb5')"></div><div class="task-text" id="flu-t5">IA integrada ao formulário</div></div>
+      <div class="task-row"><div class="cb" id="flu-cb6" onclick="togCb(this,'flu-cb6')"></div><div class="task-text" id="flu-t6">Termo de consentimento criado</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Fluxo do atendimento</span></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <div style="flex:1;min-width:100px;padding:12px;background:var(--bg2);border-radius:var(--radius);text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PASSO 1</div><div style="font-size:12px;font-weight:600">Assinatura</div><div style="font-size:11px;color:var(--text2);margin-top:2px">R$39,90/mês</div></div>
+      <div style="flex:1;min-width:100px;padding:12px;background:var(--bg2);border-radius:var(--radius);text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PASSO 2</div><div style="font-size:12px;font-weight:600">Formulário</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Anamnese completa</div></div>
+      <div style="flex:1;min-width:100px;padding:12px;background:var(--bg2);border-radius:var(--radius);text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PASSO 3</div><div style="font-size:12px;font-weight:600">IA processa</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Gera rascunho</div></div>
+      <div style="flex:1;min-width:100px;padding:12px;background:var(--bg2);border-radius:var(--radius);text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">PASSO 4</div><div style="font-size:12px;font-weight:600">Você revisa</div><div style="font-size:11px;color:var(--text2);margin-top:2px">15–20 min</div></div>
+      <div style="flex:1;min-width:100px;padding:12px;background:var(--teal-bg);border-radius:var(--radius);text-align:center"><div style="font-size:10px;color:var(--teal);margin-bottom:4px">PASSO 5</div><div style="font-size:12px;font-weight:600;color:var(--teal)">Videocall 15min</div><div style="font-size:11px;color:var(--teal);margin-top:2px">1x por mês</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAREFAS -->
+<div id="tarefas" class="page">
+  <div class="page-header">
+    <div class="page-title">Tarefas por fase</div>
+    <div class="page-sub">Clique para marcar como concluído · Salvo automaticamente</div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Esta semana — urgente</span><span class="pill pill-red">Fase 1</span></div>
+      <div class="task-row"><div class="cb" id="t1" onclick="togCb(this,'t1')"></div><div class="task-text" id="tt1">Criar conta Kiwify + produto Fluxy R$39,90 <span class="task-tag pill pill-blue">sistemas</span></div></div>
+      <div class="task-row"><div class="cb" id="t2" onclick="togCb(this,'t2')"></div><div class="task-text" id="tt2">Criar formulário anamnese Fluxy no Typeform <span class="task-tag pill pill-blue">sistemas</span></div></div>
+      <div class="task-row"><div class="cb" id="t3" onclick="togCb(this,'t3')"></div><div class="task-text" id="tt3">Escrever rascunho landing page Fluxy <span class="task-tag pill pill-purple">copy</span></div></div>
+      <div class="task-row"><div class="cb" id="t4" onclick="togCb(this,'t4')"></div><div class="task-text" id="tt4">Configurar Calendly com horários de calls <span class="task-tag pill pill-blue">sistemas</span></div></div>
+      <div class="task-row"><div class="cb" id="t5" onclick="togCb(this,'t5')"></div><div class="task-text" id="tt5">Gravar Reels anunciando lista de espera Fluxy <span class="task-tag pill pill-teal">conteúdo</span></div></div>
+      <div class="task-row"><div class="cb" id="t6" onclick="togCb(this,'t6')"></div><div class="task-text" id="tt6">Criar ActiveCampaign + importar lista atual <span class="task-tag pill pill-blue">sistemas</span></div></div>
+      <div class="task-row"><div class="cb" id="t7" onclick="togCb(this,'t7')"></div><div class="task-text" id="tt7">Criar template de protocolo no Canva <span class="task-tag pill pill-teal">conteúdo</span></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Próximas 2 semanas</span><span class="pill pill-amber">Fase 1</span></div>
+      <div class="task-row"><div class="cb" id="t8" onclick="togCb(this,'t8')"></div><div class="task-text" id="tt8">Publicar landing page Fluxy <span class="task-tag pill pill-blue">sistemas</span></div></div>
+      <div class="task-row"><div class="cb" id="t9" onclick="togCb(this,'t9')"></div><div class="task-text" id="tt9">Criar isca "7 dias de cardápio" (PDF) <span class="task-tag pill pill-teal">conteúdo</span></div></div>
+      <div class="task-row"><div class="cb" id="t10" onclick="togCb(this,'t10')"></div><div class="task-text" id="tt10">Sequência de 3 e-mails Fluxy automática <span class="task-tag pill pill-blue">sistemas</span></div></div>
+      <div class="task-row"><div class="cb" id="t11" onclick="togCb(this,'t11')"></div><div class="task-text" id="tt11">Criar estrutura da escola na plataforma <span class="task-tag pill pill-purple">escola</span></div></div>
+      <div class="task-row"><div class="cb" id="t12" onclick="togCb(this,'t12')"></div><div class="task-text" id="tt12">Gravar mini aula grátis (isca da escola) <span class="task-tag pill pill-teal">conteúdo</span></div></div>
+      <div class="task-row"><div class="cb" id="t13" onclick="togCb(this,'t13')"></div><div class="task-text" id="tt13">Criar quiz de nivelamento (Typeform) <span class="task-tag pill pill-purple">escola</span></div></div>
+      <div class="task-row"><div class="cb" id="t14" onclick="togCb(this,'t14')"></div><div class="task-text" id="tt14">Criar sequência de 5 e-mails escola <span class="task-tag pill pill-blue">sistemas</span></div></div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Maio/Jun — Gravar aulas</span><span class="pill pill-purple">Fase 2</span></div>
+      <div class="task-row"><div class="cb" id="t15" onclick="togCb(this,'t15')"></div><div class="task-text" id="tt15">Essência — Módulo 1: aulas 1-4 (fundamentos)</div></div>
+      <div class="task-row"><div class="cb" id="t16" onclick="togCb(this,'t16')"></div><div class="task-text" id="tt16">Essência — Módulo 2: aulas 5-8 (avaliação)</div></div>
+      <div class="task-row"><div class="cb" id="t17" onclick="togCb(this,'t17')"></div><div class="task-text" id="tt17">Essência — Módulo 3: aulas 9-12 (consulta)</div></div>
+      <div class="task-row"><div class="cb" id="t18" onclick="togCb(this,'t18')"></div><div class="task-text" id="tt18">Clínica — Módulo 1: aulas 1-4 (exames)</div></div>
+      <div class="task-row"><div class="cb" id="t19" onclick="togCb(this,'t19')"></div><div class="task-text" id="tt19">Clínica — Módulo 2: aulas 1-5 (patologias)</div></div>
+      <div class="task-row"><div class="cb" id="t20" onclick="togCb(this,'t20')"></div><div class="task-text" id="tt20">Aula de boas-vindas da escola (5 min)</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Jun — Lançamento</span><span class="pill pill-teal">Fase 3</span></div>
+      <div class="task-row"><div class="cb" id="t21" onclick="togCb(this,'t21')"></div><div class="task-text" id="tt21">Criar roteiro do webinário de lançamento</div></div>
+      <div class="task-row"><div class="cb" id="t22" onclick="togCb(this,'t22')"></div><div class="task-text" id="tt22">Criar slides do webinário no Canva</div></div>
+      <div class="task-row"><div class="cb" id="t23" onclick="togCb(this,'t23')"></div><div class="task-text" id="tt23">Criar página de inscrição do webinário</div></div>
+      <div class="task-row"><div class="cb" id="t24" onclick="togCb(this,'t24')"></div><div class="task-text" id="tt24">Sequência de 5 e-mails pré-webinário</div></div>
+      <div class="task-row"><div class="cb" id="t25" onclick="togCb(this,'t25')"></div><div class="task-text" id="tt25">Criar bônus do lançamento (5 protocolos)</div></div>
+      <div class="task-row"><div class="cb" id="t26" onclick="togCb(this,'t26')"></div><div class="task-text" id="tt26">Ensaiar webinário (1 semana antes)</div></div>
+      <div class="task-row"><div class="cb" id="t27" onclick="togCb(this,'t27')"></div><div class="task-text" id="tt27">🚀 Realizar webinário ao vivo — Turma 1</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ROTINA -->
+<div id="rotina" class="page">
+  <div class="page-header">
+    <div class="page-title">Rotina semanal</div>
+    <div class="page-sub">Seg–Sex · 08h00 às 12h00 · 4h/dia · 20h/semana</div>
+  </div>
+  <div class="week-grid">
+    <div class="day-card">
+      <div class="day-name">Segunda</div>
+      <div class="day-block" style="background:var(--teal-bg);border-left-color:var(--teal)">08h–08h30<br><strong>Métricas da semana</strong></div>
+      <div class="day-block" style="background:var(--blue-bg);border-left-color:var(--blue)">08h30–09h30<br><strong>Gravar vídeo pilar</strong></div>
+      <div class="day-block" style="background:var(--blue-bg);border-left-color:var(--blue)">09h30–10h30<br><strong>Editar Reels 30s</strong></div>
+      <div class="day-block" style="background:var(--blue-bg);border-left-color:var(--blue)">10h30–11h30<br><strong>Criar carrossel</strong></div>
+      <div class="day-block" style="background:var(--bg3);border-left-color:var(--text3)">11h30–12h<br>Agendar posts</div>
+    </div>
+    <div class="day-card">
+      <div class="day-name">Terça</div>
+      <div class="day-block" style="background:var(--purple-bg);border-left-color:var(--purple)">08h–09h30<br><strong>Gravar 2 aulas escola</strong></div>
+      <div class="day-block" style="background:var(--purple-bg);border-left-color:var(--purple)">09h30–10h<br><strong>Editar aulas</strong></div>
+      <div class="day-block" style="background:var(--purple-bg);border-left-color:var(--purple)">10h–11h<br><strong>Upload na plataforma</strong></div>
+      <div class="day-block" style="background:var(--blue-bg);border-left-color:var(--blue)">11h–11h30<br>Newsletter semanal</div>
+      <div class="day-block" style="background:var(--teal-bg);border-left-color:var(--teal)">11h30–12h<br>Revisar protocolos Fluxy</div>
+    </div>
+    <div class="day-card">
+      <div class="day-name">Quarta</div>
+      <div class="day-block" style="background:var(--teal-bg);border-left-color:var(--teal)">08h–09h30<br><strong>Protocolos Fluxy em lote</strong></div>
+      <div class="day-block" style="background:var(--purple-bg);border-left-color:var(--purple)">09h30–10h30<br><strong>Dúvidas alunas (grupo)</strong></div>
+      <div class="day-block" style="background:var(--blue-bg);border-left-color:var(--blue)">10h30–11h30<br>Stories da semana</div>
+      <div class="day-block" style="background:var(--bg3);border-left-color:var(--text3)">11h30–12h<br>Administrativo</div>
+    </div>
+    <div class="day-card">
+      <div class="day-name">Quinta</div>
+      <div class="day-block" style="background:var(--blue-bg);border-left-color:var(--blue)">08h–09h<br><strong>Funil / copywriting</strong></div>
+      <div class="day-block" style="background:var(--purple-bg);border-left-color:var(--purple)">09h–10h30<br><strong>Gravar 2 aulas escola</strong></div>
+      <div class="day-block" style="background:var(--blue-bg);border-left-color:var(--blue)">10h30–11h30<br>Reels extra da semana</div>
+      <div class="day-block" style="background:var(--amber-bg);border-left-color:var(--amber)">11h30–12h<br>Planejar próx. lançamento</div>
+    </div>
+    <div class="day-card">
+      <div class="day-name">Sexta</div>
+      <div class="day-block" style="background:var(--teal-bg);border-left-color:var(--teal)">08h–09h<br><strong>Análise de métricas</strong></div>
+      <div class="day-block" style="background:var(--purple-bg);border-left-color:var(--purple)">09h–10h<br><strong>Prep aula ao vivo</strong></div>
+      <div class="day-block" style="background:var(--purple-bg);border-left-color:var(--purple)">10h–11h<br><strong>Aula ao vivo escola</strong></div>
+      <div class="day-block" style="background:var(--bg3);border-left-color:var(--text3)">11h–11h30<br>Planejar semana seguinte</div>
+      <div class="day-block" style="background:var(--bg3);border-left-color:var(--text3)">11h30–12h<br>Buffer livre</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Tarde — fora do bloco principal</span></div>
+    <div class="row-item"><span style="color:var(--text2)">Seg–Qui · 14h–16h</span><span>Videochamadas Fluxy (calls de 15min com assinantes)</span></div>
+  </div>
+  <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;font-size:12px">
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:var(--purple-bg);display:inline-block"></span>Escola</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:var(--teal-bg);display:inline-block"></span>Fluxy</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:var(--blue-bg);display:inline-block"></span>Conteúdo</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:var(--amber-bg);display:inline-block"></span>Estratégia</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:2px;background:var(--bg3);display:inline-block"></span>Operacional</span>
+  </div>
+</div>
+
+<!-- CONTEÚDO -->
+<div id="conteudo" class="page">
+  <div class="page-header">
+    <div class="page-title">Estratégia de conteúdo</div>
+    <div class="page-sub">1 vídeo pilar/semana → repurpose em 5 formatos</div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Calendário semanal</span></div>
+    <table class="data-table">
+      <tr><th>Dia</th><th>Formato</th><th>Tema</th><th>Produto</th></tr>
+      <tr><td>Segunda</td><td>Carrossel feed</td><td>Tema clínico educativo</td><td><span class="pill pill-purple">Escola</span></td></tr>
+      <tr><td>Terça</td><td>Reels 30s</td><td>Dica rápida clínica</td><td><span class="pill pill-purple">Escola</span></td></tr>
+      <tr><td>Quarta</td><td>Stories série</td><td>Bastidores / caso clínico</td><td><span class="pill pill-teal">Fluxy</span></td></tr>
+      <tr><td>Quinta</td><td>Reels 60s</td><td>Caso real ou mito x verdade</td><td><span class="pill pill-purple">Escola</span></td></tr>
+      <tr><td>Sexta</td><td>Carrossel ou vídeo</td><td>Resultado de cliente/aluna</td><td><span class="pill pill-teal">Fluxy</span></td></tr>
+      <tr><td>Diário</td><td>Stories</td><td>Rotina, polls, caixinha</td><td><span class="pill pill-amber">Conexão</span></td></tr>
+    </table>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">6 pilares de conteúdo</span></div>
+      <div class="row-item"><span class="pill pill-purple" style="margin-right:8px">40%</span><span>Educação clínica</span></div>
+      <div class="row-item"><span class="pill pill-teal" style="margin-right:8px">20%</span><span>Prova social</span></div>
+      <div class="row-item"><span class="pill pill-blue" style="margin-right:8px">15%</span><span>Bastidores</span></div>
+      <div class="row-item"><span class="pill pill-green" style="margin-right:8px">15%</span><span>Nutrição para leigos</span></div>
+      <div class="row-item"><span class="pill pill-amber" style="margin-right:8px">5%</span><span>Negócios para nutri</span></div>
+      <div class="row-item"><span class="pill pill-red" style="margin-right:8px">5%</span><span>Oferta direta</span></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Repurpose: 1 vídeo → 6 conteúdos</span></div>
+      <div class="row-item"><span style="color:var(--text2)">1.</span><span>YouTube — vídeo completo 10min</span></div>
+      <div class="row-item"><span style="color:var(--text2)">2.</span><span>Reels 30s — momento mais impactante</span></div>
+      <div class="row-item"><span style="color:var(--text2)">3.</span><span>Reels 60s — resumo em 3 pontos</span></div>
+      <div class="row-item"><span style="color:var(--text2)">4.</span><span>Carrossel — 5-7 slides de resumo</span></div>
+      <div class="row-item"><span style="color:var(--text2)">5.</span><span>Stories — série de 3 partes</span></div>
+      <div class="row-item"><span style="color:var(--text2)">6.</span><span>Newsletter — texto + link YouTube</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIMULADOR -->
+<div id="simulador" class="page">
+  <div class="page-header">
+    <div class="page-title">Simulador de receita</div>
+    <div class="page-sub">Preencha os números reais para ver sua receita atual e projeções</div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Escola Online — assinantes por plano</span></div>
+      <div class="sim-row-input"><span class="sim-label">🌱 Essência (R$97/mês)</span><input class="sim-input" type="number" id="s1" value="0" min="0" oninput="simular()"></div>
+      <div class="sim-row-input"><span class="sim-label">🔬 Clínica+ (R$147/mês)</span><input class="sim-input" type="number" id="s2" value="0" min="0" oninput="simular()"></div>
+      <div class="sim-row-input"><span class="sim-label">⚡ Expert (R$247/mês)</span><input class="sim-input" type="number" id="s3" value="0" min="0" oninput="simular()"></div>
+      <div class="sim-row-input"><span class="sim-label">🏆 Mentoria (R$497/mês)</span><input class="sim-input" type="number" id="s4" value="0" min="0" oninput="simular()"></div>
+      <div style="margin-top:12px;border-top:0.5px solid var(--border);padding-top:10px">
+        <div class="card-header" style="margin-bottom:10px"><span class="card-title">Consultoria Fluxy</span></div>
+        <div class="sim-row-input"><span class="sim-label">Assinantes Fluxy (R$39,90/mês)</span><input class="sim-input" type="number" id="s5" value="0" min="0" oninput="simular()"></div>
+        <div class="sim-row-input"><span class="sim-label">Vendas cursos avulsos/mês</span><input class="sim-input" type="number" id="s6" value="0" min="0" oninput="simular()"></div>
+        <div class="sim-row-input"><span class="sim-label">Ticket médio cursos (R$)</span><input class="sim-input" type="number" id="s7" value="230" min="0" oninput="simular()"></div>
+      </div>
+      <div style="margin-top:14px"><button class="btn btn-primary" onclick="salvarSimulador()" style="width:100%">Salvar estes números</button></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Resultado</span></div>
+      <div class="sim-result">
+        <div class="sim-result-row"><span style="color:var(--text2)">Escola (todos planos)</span><span id="sr-esc" style="font-weight:500">R$0</span></div>
+        <div class="sim-result-row"><span style="color:var(--text2)">Consultoria Fluxy</span><span id="sr-flu" style="font-weight:500">R$0</span></div>
+        <div class="sim-result-row"><span style="color:var(--text2)">Cursos avulsos</span><span id="sr-cur" style="font-weight:500">R$0</span></div>
+        <div class="sim-result-row sim-total"><span>Total mensal</span><span id="sr-tot" style="color:var(--teal)">R$0</span></div>
+        <div id="sr-msg" class="sim-msg"></div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="card-title" style="margin-bottom:10px">Comparativo com as metas</div>
+        <div class="prog-label"><span>Meta R$30k (dez/26)</span><span id="m30-v">0%</span></div>
+        <div class="prog-track"><div class="prog-fill" id="m30" style="width:0%;background:var(--teal)"></div></div>
+        <div class="prog-label"><span>Meta R$100k (2027)</span><span id="m100-v">0%</span></div>
+        <div class="prog-track"><div class="prog-fill" id="m100" style="width:0%;background:var(--purple)"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- METAS -->
+<div id="metas" class="page">
+  <div class="page-header">
+    <div class="page-title">Metas e projeções</div>
+    <div class="page-sub">Crescimento mensal esperado de Mai/26 a Dez/26</div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Meta dez/2026</div><div class="kpi-val">R$30k</div><div class="kpi-sub">faturamento mensal</div></div>
+    <div class="kpi"><div class="kpi-label">Meta 2027</div><div class="kpi-val">R$100k</div><div class="kpi-sub">faturamento mensal</div></div>
+    <div class="kpi"><div class="kpi-label">Escola — meta dez/26</div><div class="kpi-val">200</div><div class="kpi-sub">assinantes</div></div>
+    <div class="kpi"><div class="kpi-label">Fluxy — meta dez/26</div><div class="kpi-val">150</div><div class="kpi-sub">assinantes</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Crescimento projetado de assinantes</span></div>
+    <div class="chart-wrap" style="height:220px"><canvas id="metasChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">Projeção de receita mensal</span></div>
+    <div class="chart-wrap" style="height:220px"><canvas id="recChart"></canvas></div>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div id="timeline" class="page">
+  <div class="page-header">
+    <div class="page-title">Timeline — Roadmap completo</div>
+    <div class="page-sub">Abr/2026 → 2027</div>
+  </div>
+  <div class="card">
+    <div class="tl-wrap">
+      <div class="tl-item"><div class="tl-dot" style="background:#378ADD"></div><div class="tl-phase">Abr–Mai 2026 · Fase 1</div><div class="tl-title">Construção de sistemas</div><div class="tl-desc">Kiwify + formulário Fluxy + landing page + e-mail marketing + estrutura da escola + iscas digitais</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:#534AB7"></div><div class="tl-phase">Mai 2026 · Semana 3</div><div class="tl-title">Beta Fluxy — 20 primeiros assinantes</div><div class="tl-desc">Abertura beta com desconto (R$19,90 1º mês) · Testar fluxo completo · Coletar feedback e depoimentos</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:#534AB7"></div><div class="tl-phase">Mai–Jun 2026 · Fase 2</div><div class="tl-title">Gravar MVP da escola</div><div class="tl-desc">Casa Essência completa (12 aulas) + Casa Clínica módulos 1 e 2 + quiz de nivelamento + boas-vindas</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:#1D9E75"></div><div class="tl-phase">Jun 2026 — Semana 3</div><div class="tl-title">🚀 Webinário de lançamento — Turma 1</div><div class="tl-desc">Meta: 50–80 alunas na 1ª turma · Fluxy com 40–50 assinantes ativos</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:#1D9E75"></div><div class="tl-phase">Jul–Ago 2026</div><div class="tl-title">Crescimento + 2º lançamento</div><div class="tl-desc">Webinário 2 com depoimentos reais · Escola 90+ · Fluxy 80+ · Otimizar churn</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:#BA7517"></div><div class="tl-phase">Set–Out 2026</div><div class="tl-title">Lançar Casa Expert + upsells</div><div class="tl-desc">Ofertas de upgrade · Programa de indicação Fluxy · Escola 140+ · Fluxy 110+</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:#BA7517"></div><div class="tl-phase">Nov 2026</div><div class="tl-title">Black Friday</div><div class="tl-desc">Plano anual escola (40% off) · Fluxy 3×2 · Pico de caixa + cashflow adiantado para 2027</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:#639922"></div><div class="tl-phase">Dez 2026</div><div class="tl-title">🎯 Meta R$30k/mês atingida</div><div class="tl-desc">200 escola + 150 Fluxy + 10 mentorias · Análise do ano · Planejamento 2027</div></div>
+      <div class="tl-item"><div class="tl-dot" style="background:#D85A30"></div><div class="tl-phase">2027</div><div class="tl-title">🏆 Meta R$100k/mês</div><div class="tl-desc">Contratar assistente de conteúdo + nutricionista parceira · 350 escola + 400 Fluxy + 15 mentorias</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<div id="save-banner">Salvo automaticamente ✓</div>
+
+<script>
+const STORE = 'nutriunique_v1';
+let state = {};
+
+function load() {
+  try { state = JSON.parse(localStorage.getItem(STORE) || '{}'); } catch(e) { state = {}; }
+  if (!state.tasks) state.tasks = {};
+  if (!state.sim) state.sim = {s1:0,s2:0,s3:0,s4:0,s5:0,s6:0,s7:230};
+  if (!state.fluxy_infra) state.fluxy_infra = {};
+  applyState();
+}
+
+function save() {
+  localStorage.setItem(STORE, JSON.stringify(state));
+  const b = document.getElementById('save-banner');
+  if (b) { b.style.display='block'; b.style.opacity='1'; setTimeout(()=>{ b.style.opacity='0'; setTimeout(()=>b.style.display='none',300); },1500); }
+  const u = document.getElementById('last-updated');
+  if (u) u.textContent = new Date().toLocaleDateString('pt-BR');
+}
+
+function applyState() {
+  Object.keys(state.tasks).forEach(id => {
+    if (state.tasks[id]) {
+      const cb = document.getElementById(id);
+      const tt = document.getElementById('t'+id.replace('t',''));
+      if (cb) cb.classList.add('done');
+      if (tt) tt.classList.add('done');
+    }
+  });
+  Object.keys(state.fluxy_infra).forEach(id => {
+    if (state.fluxy_infra[id]) {
+      const cb = document.getElementById(id);
+      const tid = 'flu-t'+id.replace('flu-cb','');
+      const tt = document.getElementById(tid);
+      if (cb) cb.classList.add('done');
+      if (tt) tt.classList.add('done');
+    }
+  });
+  const sim = state.sim;
+  ['s1','s2','s3','s4','s5','s6','s7'].forEach(k => {
+    const el = document.getElementById(k);
+    if (el) el.value = sim[k]||0;
+  });
+  simular();
+}
+
+function togCb(el, id) {
+  el.classList.toggle('done');
+  const isTask = id.startsWith('t') && !id.startsWith('t1') || id === 't1' || id === 't2' || id === 't3' || id === 't4' || id === 't5' || id === 't6' || id === 't7' || id === 't8' || id === 't9';
+  const txtId = id.startsWith('flu-cb') ? 'flu-t'+id.replace('flu-cb','') : 'tt'+id.replace('t','');
+  const txt = document.getElementById(txtId) || document.getElementById('tt'+id.replace(/\D/g,''));
+  if (txt) txt.classList.toggle('done');
+  if (id.startsWith('flu-cb')) state.fluxy_infra[id] = el.classList.contains('done');
+  else state.tasks[id] = el.classList.contains('done');
+  save();
+}
+
+function go(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'metas') setTimeout(initMetasCharts, 100);
+}
+
+function fmt(n) { return 'R$' + Math.round(n).toLocaleString('pt-BR'); }
+
+function simular() {
+  const s1=+document.getElementById('s1').value||0;
+  const s2=+document.getElementById('s2').value||0;
+  const s3=+document.getElementById('s3').value||0;
+  const s4=+document.getElementById('s4').value||0;
+  const s5=+document.getElementById('s5').value||0;
+  const s6=+document.getElementById('s6').value||0;
+  const s7=+document.getElementById('s7').value||230;
+  const esc=s1*97+s2*147+s3*247+s4*497;
+  const flu=s5*39.9;
+  const cur=s6*s7;
+  const tot=esc+flu+cur;
+  const set = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  const setW = (id,w) => { const el=document.getElementById(id); if(el) el.style.width=w+'%'; };
+  set('sr-esc', fmt(esc)); set('sr-flu', fmt(flu)); set('sr-cur', fmt(cur)); set('sr-tot', fmt(tot));
+  const p30 = Math.min(100,Math.round(tot/30000*100));
+  const p100 = Math.min(100,Math.round(tot/100000*100));
+  set('m30-v', p30+'%'); setW('m30', p30);
+  set('m100-v', p100+'%'); setW('m100', p100);
+  const msg = tot>=100000?'🏆 Meta R$100k/mês atingida!':tot>=30000?'🎯 Meta R$30k/mês atingida!':tot>0?'Faltam '+fmt(30000-tot)+' para a meta de dez/26':'Preencha os números acima para calcular';
+  const msgEl = document.getElementById('sr-msg');
+  if (msgEl) { msgEl.textContent=msg; msgEl.style.background=tot>=30000?'var(--green-bg)':'var(--bg3)'; msgEl.style.color=tot>=30000?'var(--green)':'var(--text2)'; }
+  set('kpi-rec', fmt(tot));
+  set('kpi-esc', s1+s2+s3+s4);
+  set('kpi-flu', s5);
+  set('esc-total', s1+s2+s3+s4);
+  set('esc-rec', fmt(esc));
+  set('flu-total', s5);
+  set('flu-rec', fmt(flu));
+  setW('bar-rec', Math.min(100,tot/300)); setW('bar-esc', Math.min(100,(s1+s2+s3+s4)/2)); setW('bar-flu', Math.min(100,s5/1.5));
+  setW('esc-total-bar', Math.min(100,(s1+s2+s3+s4)/2)); setW('esc-rec-bar', Math.min(100,esc/216));
+  setW('flu-total-bar', Math.min(100,s5/1.5)); setW('flu-rec-bar', Math.min(100,flu/59.85));
+  setW('prog-esc', Math.min(100,Math.round(esc/21600*100)));
+  setW('prog-flu', Math.min(100,Math.round(flu/5985*100)));
+  setW('prog-cur', Math.min(100,Math.round(cur/2415*100)));
+  set('prog-esc-v', fmt(esc)); set('prog-flu-v', fmt(flu)); set('prog-cur-v', fmt(cur));
+  const pct = tot>0?Math.round(tot/30000*100):0;
+  set('prog-tot', fmt(tot)+' ('+pct+'% da meta)');
+  if (tot > 0) {
+    setW('dist-esc', Math.round(esc/tot*100)); set('dist-esc-v', Math.round(esc/tot*100)+'%');
+    setW('dist-flu', Math.round(flu/tot*100)); set('dist-flu-v', Math.round(flu/tot*100)+'%');
+    setW('dist-cur', Math.round(cur/tot*100)); set('dist-cur-v', Math.round(cur/tot*100)+'%');
+  }
+}
+
+function salvarSimulador() {
+  state.sim = {
+    s1:+document.getElementById('s1').value||0,
+    s2:+document.getElementById('s2').value||0,
+    s3:+document.getElementById('s3').value||0,
+    s4:+document.getElementById('s4').value||0,
+    s5:+document.getElementById('s5').value||0,
+    s6:+document.getElementById('s6').value||0,
+    s7:+document.getElementById('s7').value||230,
+  };
+  save();
+}
+
+function ajustarAulas() {
+  const vals = [
+    {id:'aula-e', max:12, label:'Casa Essência — quantas aulas você já gravou? (0–12)'},
+    {id:'aula-c', max:12, label:'Casa Clínica — quantas aulas gravadas? (0–12)'},
+    {id:'aula-x', max:8,  label:'Casa Expert — quantas aulas gravadas? (0–8)'},
+    {id:'aula-m', max:4,  label:'Casa Mentoria — quantas etapas concluídas? (0–4)'},
+  ];
+  vals.forEach(v => {
+    const r = prompt(v.label);
+    if (r !== null) {
+      const n = Math.min(v.max, Math.max(0, parseInt(r)||0));
+      const el = document.getElementById(v.id);
+      const vl = document.getElementById(v.id+'-v');
+      if (el) el.style.width = Math.round(n/v.max*100)+'%';
+      if (vl) vl.textContent = n+' / '+v.max;
+      const totalEl = document.getElementById('esc-aulas');
+      if (totalEl) {
+        const cur = parseInt(totalEl.textContent)||0;
+        totalEl.textContent = n;
+      }
+    }
+  });
+}
+
+let metasInited = false;
+function initMetasCharts() {
+  if (metasInited) return;
+  metasInited = true;
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+  const textColor = dark ? '#9a9893' : '#6b6b67';
+  const labels = ['Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const opts = { responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{font:{size:11},boxWidth:12,color:textColor}}}, scales:{y:{grid:{color:gridColor},ticks:{font:{size:10},color:textColor}},x:{grid:{display:false},ticks:{font:{size:10},color:textColor}}} };
+  const c1 = document.getElementById('metasChart');
+  if (c1) new Chart(c1, { type:'line', data:{ labels, datasets:[
+    {label:'Escola',data:[0,50,70,90,110,140,170,200],borderColor:'#534AB7',backgroundColor:'rgba(83,74,183,0.08)',tension:.4,fill:true,pointRadius:3},
+    {label:'Fluxy',data:[20,40,60,80,95,110,130,150],borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',tension:.4,fill:true,pointRadius:3}
+  ]}, options:{...opts,plugins:{...opts.plugins}} });
+  const c2 = document.getElementById('recChart');
+  if (c2) new Chart(c2, { type:'bar', data:{ labels, datasets:[
+    {label:'Receita total (R$)',data:[798,9946,14934,18990,22735,28889,34387,40685],backgroundColor:'rgba(83,74,183,0.7)',borderRadius:4}
+  ]}, options:{...opts, plugins:{...opts.plugins}, scales:{y:{grid:{color:gridColor},ticks:{font:{size:10},color:textColor,callback:v=>v>=1000?'R$'+v/1000+'k':'R$'+v}},x:{grid:{display:false},ticks:{font:{size:10},color:textColor}}}} });
+}
+
+function initGrowthChart() {
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const gc = dark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.06)';
+  const tc = dark?'#9a9893':'#6b6b67';
+  const ctx = document.getElementById('growthChart');
+  if (!ctx || !window.Chart) return;
+  new Chart(ctx, { type:'line', data:{ labels:['Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], datasets:[
+    {label:'Escola',data:[0,50,70,90,110,140,170,200],borderColor:'#534AB7',backgroundColor:'rgba(83,74,183,0.08)',tension:.4,fill:true,pointRadius:3},
+    {label:'Fluxy',data:[20,40,60,80,95,110,130,150],borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',tension:.4,fill:true,pointRadius:3}
+  ]}, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{font:{size:11},boxWidth:12,color:tc}}}, scales:{y:{grid:{color:gc},ticks:{font:{size:10},color:tc}},x:{grid:{display:false},ticks:{font:{size:10},color:tc}}}} });
+}
+
+document.getElementById('last-updated').textContent = new Date().toLocaleDateString('pt-BR');
+load();
+setTimeout(initGrowthChart, 400);
+</script>
+</body>
+</html>
